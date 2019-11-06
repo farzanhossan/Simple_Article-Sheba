@@ -1,4 +1,4 @@
-const db = require('../../../connection');
+const db = require('../../connection');
 require('dotenv').config();
 let jwt = require('jsonwebtoken');
 
@@ -109,50 +109,23 @@ const userLogin = (req, res, next) =>{
 }
 
 const userDelete = (req,res,next)=>{
-    try {
-        const token = req.headers['authorization'].split(' ')[1];
-        if (token == null) {
-            return res.status(403).json({
-            message: "Token not valid"
+    let user_id = req.params.user_id;
+    let sql = 'delete from users where user_id = ?';
+    db.query(sql, user_id, (err, result)=>{
+        if(err) throw err;
+        // console.log(result.affectedRows);
+        if(result.affectedRows != 0){
+            return res.status(200).json({
+                message: 'Deleted Successfully',
+                result : result
+            })
+        }else{
+            return res.status(200).json({
+                message: 'Already Deleted'
             })
         }
-        jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err, result) =>{
-            if(err) throw err;
-            //console.log(result.user_id);
-            let tokenId = result.user_id;
-            let sql1 = 'select * from users where user_id = ?'
-            db.query(sql1, tokenId, (err, result)=>{
-                if(err) throw err;
-                if(result == ""){
-                    return res.status(403).json({
-                        message: 'User Not Found. Please Register Or Login',
-                        // result : result
-                    })
-                }else{
-                    let user_id = req.params.user_id;
-                    let sql = 'delete from users where user_id = ?';
-                    db.query(sql, user_id, (err, result)=>{
-                        if(err) throw err;
-                        // console.log(result.affectedRows);
-                        if(result.affectedRows != 0){
-                            return res.status(200).json({
-                                message: 'Deleted Successfully',
-                                result : result
-                            })
-                        }else{
-                            return res.status(200).json({
-                                message: 'Already Deleted'
-                            })
-                        }
-                    })
+    })
 
-                }
-            })
-        })    
-        
-    } catch (error) {
-        if(error) throw error;
-    }
 }
 
 module.exports ={
